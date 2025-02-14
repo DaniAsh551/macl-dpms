@@ -3,6 +3,7 @@ import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
 import Nav from "~/components/Nav";
 import "./app.css";
+import "../node_modules/daisyui/dist/styled.css";
 
 export default function App() {
   return (

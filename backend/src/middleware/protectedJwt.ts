@@ -1,17 +1,18 @@
 import { Context, Next } from "hono";
 import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import { error as errRes } from "../response";
 
 export const protectedJwt = async (c: Context, next: Next) => {
     const bearerToken = c.req.header("Authorization");
 
     if (!bearerToken) {
-        return c.json({ success: false, message: "No bearer token" }, 401);
+        return errRes(c, "No bearer token", 401);
     }
 
     const accessToken = bearerToken.split(" ")[1] ?? null;
 
     if (!accessToken) {
-        return c.json({ success: false, message: "No access token" }, 401);
+        return errRes(c, "No access token", 401);
     }
 
     try {
@@ -27,21 +28,21 @@ export const protectedJwt = async (c: Context, next: Next) => {
         console.error(error);
 
         if (error instanceof JsonWebTokenError) {
-            return c.json(
-                { success: false, message: "Invalid access token" },
+            return errRes(c,
+                "Invalid access token",
                 401
             );
         }
 
         if (error instanceof TokenExpiredError) {
-            return c.json(
-                { success: false, message: "Access token expired" },
+            return errRes(c,
+                "Access token expired",
                 401
             );
         }
 
-        return c.json(
-            { success: false, message: "something wrong on server" },
+        return errRes(c,
+            "something wrong on server",
             500
         );
     }

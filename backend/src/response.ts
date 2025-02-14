@@ -1,5 +1,5 @@
 import { Context } from "hono";
-import { StatusCode } from "hono/utils/http-status";
+import { ContentfulStatusCode as StatusCode } from "hono/utils/http-status";
 
 export interface IResponse {
     status:      number,
