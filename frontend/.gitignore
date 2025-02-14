@@ -6,6 +6,8 @@ dist
 .netlify
 .vinxi
 app.config.timestamp_*.js
+bun.lock
+bun.lockb
 
 # Environment
 .env
