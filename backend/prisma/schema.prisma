@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator zod {
+  provider  = "zod-prisma-types"
+  output    = "../../src/zod"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  uuid          String   @unique @default(uuid())
+  email         String   @unique
+  name          String?
+  password      String
+  refresh_token String?
+  user_permissions UserPermission[]
+  user_roles    UserRole[]
+  department_id Int
+  department    Department @relation(fields: [department_id], references: [id])
+  permits       Permit[]
+  deleted       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  deleted   Boolean  @default(false)
+  users     User[]
+  permits   Permit[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Permit {
+  id          Int       @id @default(autoincrement())
+  full_name   String
+  user_id     Int
+  user        User      @relation(fields: [user_id], references: [id])
+  department  Department @relation(fields: [department_id], references: [id])
+  department_id Int
+  type        String
+  approved    Boolean
+  justification String?
+  valid_from  DateTime
+  valid_until DateTime
+  deleted     Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Role {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  user_roles    UserRole[]
+  deleted       Boolean  @default(false)
+  role_permissions RolePermission[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model UserRole {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [user_id], references: [id])
+  user_id   Int
+  role      Role     @relation(fields: [role_id], references: [id])
+  role_id   Int
+  deleted   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Permission {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  user_permissions UserPermission[]
+  role_permissions RolePermission[]
+  deleted       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model RolePermission {
+  id            Int      @id @default(autoincrement())
+  permission    Permission @relation(fields: [permission_id], references: [id])
+  permission_id Int
+  role          Role     @relation(fields: [role_id], references: [id])
+  role_id       Int
+  deleted       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model UserPermission {
+  id            Int      @id @default(autoincrement())
+  user          User     @relation(fields: [user_id], references: [id])
+  user_id       Int
+  permission    Permission @relation(fields: [permission_id], references: [id])
+  permission_id Int
+  deleted       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
