@@ -3,11 +3,13 @@
 
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = [ "native", "debian-openssl-3.0.x", "linux-musl" ]
 }
 
 generator zod {
   provider  = "zod-prisma-types"
   output    = "../src/zod"
+  binaryTargets = [ "native", "debian-openssl-3.0.x", "linux-musl" ]
 }
 
 datasource db {

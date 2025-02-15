@@ -1,4 +1,4 @@
-const API_BASE = `${(new URL(window.location.href)).protocol}/${window.location.hostname}:3000/api`;
+const API_BASE = `${(new URL(window.location.href)).protocol}/${window.location.hostname}/api`;
 
 export interface IResponse<T> {
     status: number;
@@ -66,13 +66,13 @@ export class ApiClient {
 
         const url: URL = new URL(API_BASE + uri);
 
-        if (!["post", "patch"].includes(method) && data)
+        if (!["post", "put"].includes(method) && data)
             Object.keys(data).forEach((k) => url.searchParams.set(k, data[k]));
 
         const fetchResp = await fetch(url, {
             method,
             body:
-                ["post", "patch"].includes(method) && data
+                ["post", "put"].includes(method) && data
                     ? JSON.stringify(data)
                     : undefined,
             headers,
@@ -111,8 +111,8 @@ export class ApiClient {
         return await this.request<T>(url, "post", data, headers);
     }
 
-    async patch<T>(url: string, data?: any, headers: any = {}) {
-        return await this.request<T>(url, "patch", data, headers);
+    async put<T>(url: string, data?: any, headers: any = {}) {
+        return await this.request<T>(url, "put", data, headers);
     }
 
     async delete<T>(url: string, data?: any, headers: any = {}) {

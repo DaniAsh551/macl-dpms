@@ -11,8 +11,12 @@
     "@solid-mediakit/auth": "^3.1.2",
     "@solidjs/router": "^0.15.0",
     "@solidjs/start": "^1.1.0",
+    "@zxing/browser": "^0.1.5",
+    "json-2-csv": "^5.5.8",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^2.5.2",
     "solid-js": "^1.9.2",
+    "table-to-csv": "git+https://github.com/gouthams96/table-to-csv.git",
     "vinxi": "^0.5.3",
     "zod": "^3.24.2"
   },

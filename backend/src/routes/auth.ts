@@ -16,6 +16,7 @@ authRoutes.post("/login", async (c) => {
         password: z.string(),
     });
 
+    console.log(await c.req.json());
     const parsed = schema.safeParse(await c.req.json());
 
     if (!parsed.success) {
@@ -26,7 +27,6 @@ authRoutes.post("/login", async (c) => {
             parsed.error.flatten()
         );
     }
-
     const user = await prisma.user.findUnique({
         where: { email: parsed.data.email },
     });

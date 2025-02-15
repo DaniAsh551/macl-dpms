@@ -5,8 +5,10 @@ import {api} from "../api";
 
 const NAV_ITEMS = [
   { text: "Home", url: "/" },
-  { text: "About", url: "/about" },
   { text: "Permits", url: "/mypermits" },
+  { text: "Approvals", url: "/approvals" },
+  { text: "Dashboard", url: "/dashboard" },
+  { text: "Verify", url: "/verify" },
 ];
 
 const logout = () => {
@@ -27,7 +29,7 @@ export default function Nav() {
       <h1 class='w-full text-3xl font-bold text-[#00df9a]'>DPMS.</h1>
 
       {/* Desktop Navigation */}
-      <ul class='hidden md:flex'>
+      <ul class='hidden md:flex md:overflow-x-auto w-full'>
         {NAV_ITEMS.map(item => (
           <li
             class={`border-b-2 cursor-pointer mx-1.5 sm:mx-6 ${active(item.url)}`}
@@ -36,11 +38,6 @@ export default function Nav() {
           </li>
         ))}
           {
-            api.isLoggedIn() && <li title="Logout" onclick={logout}>
-              <img class="mr-1 w-36 rounded-full cursor-pointer" src={`https://ui-avatars.com/api/?name=${api.user.get()!.name}&background=random`} />
-            </li>
-          }
-          {
             !api.isLoggedIn() && <li
               class={`border-b-2 cursor-pointer mx-1.5 sm:mx-6 ${active("/login")}`}
             >
@@ -48,6 +45,11 @@ export default function Nav() {
             </li>
           }
       </ul>
+      {
+        api.isLoggedIn() && <a title="Logout" onclick={logout}>
+          <img class="hidden md:flex ml-5 mr-1 w-10 rounded-full cursor-pointer" src={`https://ui-avatars.com/api/?name=${api.user.get()!.name}&background=random`} />
+        </a>
+      }
 
       {/* Mobile Navigation Icon */}
       <div class='block md:hidden'>
@@ -60,7 +62,7 @@ export default function Nav() {
       <ul
         class={
           nav()
-            ? 'fixed md:hidden left-0 top-0 w-[60%] h-full border-r border-r-gray-900 bg-[#000300] ease-in-out duration-500 z-50'
+            ? 'px-5 fixed md:hidden left-0 top-0 w-[60%] h-full border-r border-r-gray-900 bg-[#000300] ease-in-out duration-500 z-50'
             : 'ease-in-out w-[60%] duration-500 fixed top-0 bottom-0 left-[-100%]'
         }
       >
@@ -70,11 +72,8 @@ export default function Nav() {
         {/* Mobile Navigation Items */}
         <li>
           {
-            api.isLoggedIn() && <li>
+            api.isLoggedIn() && <li onclick={logout}>
               <img class="mr-1 w-8 h-8 rounded-full cursor-pointer" src={`https://ui-avatars.com/api/?name=${api.user.get()!.name}&background=random`} />
-              <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-                <li><a onClick={logout}>Logout</a></li>
-              </ul>
             </li>
           }
           {

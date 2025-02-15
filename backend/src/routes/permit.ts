@@ -22,7 +22,7 @@ permitRoutes.get("/", async (c) => {
 
     if(!await hasPermission(
         userId(c)!,
-        "permits:read",
+        "permit:read",
     )) {
         return error(c, "You do not have access to this operation", 403)
     }
@@ -38,64 +38,79 @@ permitRoutes.get("/", async (c) => {
     Object.keys(PermitSchema.keyof().Values).forEach(k => {
         const val = c.req.query(k);
         if (val !== undefined) {
-            filters[k] = val;
+            const t = typeof(filters[k]);
+            switch(t) {
+                case "number":
+                case "bigint":
+                    filters[k] = Number(val);
+                    break;
+                case "boolean":
+                    filters[k] = val === "true";
+                    break;
+                case "string":
+                    filters[k] = val;
+                    break;
+                case "object":
+                case "undefined":
+                    if(["null", "undefined"].includes(val))
+                        filters[k] = null;
+                    else filters[k] = val;
+                break;
+            }
         }
     });
 
     const search = c.req.query("s");
     if(search) {
-        const pFilter = (filters as Permit);
-        // search dept
-        if (pFilter.department_id !== undefined) {
-            filters.department = {
-                where: {
-                    OR: {
-                        name: {
-                            contains: search,
-                        }
+        filters.OR = [
+            {
+                reason: {
+                    contains: search
+                }
+            },
+            {
+                full_name: {
+                    contains: search
+                }
+            },
+            {
+                justification: {
+                    contains: search
+                }
+            },
+            {
+                user: {
+                    name: {
+                        contains: search
                     }
                 }
-            }
-        }
-        filters.OR = [];
-        // search user
-        if (pFilter.user_id === undefined) {
-            filters.OR = [
-                ...filters.OR,
-                {
-                    employee_id: {
-                        contains: search,
+            },
+            {
+                department: {
+                    name: {
+                        contains: search
                     }
                 }
-            ];
-        }
-        if (pFilter.full_name === undefined) {
-            filters.OR = [
-                ...filters.OR,
-                {
-                    full_name: {
-                        contains: search,
-                    }
-                }
-            ];
-        }
-        // search justification
-        if (pFilter.justification === undefined) {
-            filters.OR = [
-                ...filters.OR,
-                {
-                    justification: {
-                        contains: search,
-                    }
-                }
-            ];
-        }
+            },
+        ];
     }
 
-    const permits = await prisma.permit.findMany({
+    const permits = (await prisma.permit.findMany({
         where: filters,
-        orderBy
-    });
+        orderBy,
+        include: {
+            user: {
+                include: {
+                    department: true
+                },
+            }
+        }
+    })).map(x => ({ ...x, user: {
+        ...x.user,
+        //remove for security
+        password: undefined,
+        refresh_token: undefined
+    } }));
 
     return success(c, permits);
 });
@@ -107,6 +122,14 @@ permitRoutes.get("/:id{[0-9]+}", async (c) => {
     const permit = await prisma.permit.findUnique({
         where: {
             id: parseInt(c.req.param("id"))
+        },
+        include: {
+            user: {
+                include: {
+                    department: true
+                },
+            },
+            department: true
         }
     });
 
@@ -118,12 +141,19 @@ permitRoutes.get("/:id{[0-9]+}", async (c) => {
     if(!isMine) {
         const hasReadPermission = await hasPermission(
             userId(c)!,
-            ["permits:read", "permits:get"], true
+            ["permit:read", "permit:get"], true
         );
         if(!hasReadPermission) return error(c, "You do not have permission to read this permit", 403);
     }
 
-    return success(c, permit);
+    return success(c, {
+        ...permit, user: {
+            ...permit.user,
+            //remove for security
+            password: undefined,
+            refresh_token: undefined
+        }
+    });
 });
 
 /**
@@ -170,7 +200,7 @@ permitRoutes.put("/:id{[0-9]+}", async (c) => {
     const isApproving = parsed.data?.approved !== undefined;
     if(isApproving && !await hasPermission(
         userId(c)!,
-        "permits:approve",
+        "permit:approve",
     )) {
         return error(c, "You do not have access to this operation", 403)
     } else if(isApproving && !parsed.data?.reason) {
@@ -194,7 +224,7 @@ permitRoutes.put("/:id{[0-9]+}", async (c) => {
 permitRoutes.delete("/:id{[0-9]+}", async (c) => {
     if(!await hasPermission(
         userId(c)!,
-        "permits:delete",
+        "permit:delete",
     )) {
         return error(c, "You do not have access to this operation", 403)
     }
@@ -212,24 +242,30 @@ permitRoutes.delete("/:id{[0-9]+}", async (c) => {
 permitRoutes.get("/expiring", async (c) => {
     if(!await hasPermission(
         userId(c)!,
-        "permits:getexpiring",
+        "permit:read",
     )) {
         return error(c, "You do not have access to this operation", 403)
     }
-    const permits = await prisma.permit.findMany({
+    const permits = (await prisma.permit.findMany({
         where: {
             valid_until: {
-                lt: addDays(new Date(), 14)
+                lte: addDays(new Date(), 14)
             },
             deleted: false
         },
-        select: {
-            id: true
+        include: {
+            user: true,
+            department: true
         },
         orderBy: {
             id: "desc"
         }
-    });
+    })).map(x => ({ ...x, user: {
+        ...x.user,
+        //remove for security
+        password: undefined,
+        refresh_token: undefined
+    } }));
 
     return success(c, permits);
 });

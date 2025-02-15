@@ -32,6 +32,8 @@ export async function seedRoles(prisma:PrismaClient):Promise<{
             "permit:create"
         ],
         admin: [
+            "permit:read",
+            "permit:get",
             "permit:approve",
             "department:read"
         ],
