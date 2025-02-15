@@ -16,7 +16,7 @@ export async function seedRoles(prisma:PrismaClient):Promise<{
         "permit:approve",
         ...[ "department", "permit", "user" ].
             flatMap(mod => 
-                [ "read", "get", "delete" ].map(p => `${mod}:${p}`)
+                [ "create", "read", "get", "delete" ].map(p => `${mod}:${p}`)
         )
     ];
 
@@ -28,7 +28,9 @@ export async function seedRoles(prisma:PrismaClient):Promise<{
     
     const roleNames = ["staff", "admin", "security", "superadmin"];
     const rolePerms = {
-        staff: [],
+        staff: [
+            "permit:create"
+        ],
         admin: [
             "permit:approve",
             "department:read"

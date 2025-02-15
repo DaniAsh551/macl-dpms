@@ -5,10 +5,12 @@ import {api} from "../api";
 
 const NAV_ITEMS = [
   { text: "Home", url: "/" },
-  { text: "About", url: "/about" }
+  { text: "About", url: "/about" },
+  { text: "Permits", url: "/mypermits" },
 ];
 
 const logout = () => {
+  if(!confirm("Are you sure you would like to logout?")) return;
   api.logout();
   window.location.reload();
 };
@@ -34,11 +36,8 @@ export default function Nav() {
           </li>
         ))}
           {
-            api.isLoggedIn() && <li>
-              <img class="mr-1 w-8 h-8 rounded-full cursor-pointer" src={`https://ui-avatars.com/api/?name=${api.user.get()!.name}&background=random`} />
-              <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-                <li><a onClick={logout}>Logout</a></li>
-              </ul>
+            api.isLoggedIn() && <li title="Logout" onclick={logout}>
+              <img class="mr-1 w-36 rounded-full cursor-pointer" src={`https://ui-avatars.com/api/?name=${api.user.get()!.name}&background=random`} />
             </li>
           }
           {

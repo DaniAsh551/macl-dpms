@@ -33,32 +33,33 @@ export default function Login() {
   };
 
   return (
-    <main class="text-center mx-auto text-gray-700 p-4">
+    <main class="mx-auto text-gray-700 p-4 justify-center text-center">
       <h1 class="max-6-xs text-6xl text-sky-700 font-thin uppercase my-16">Login</h1>
-      
-      <div class="card bg-base-100 image-full w-96 shadow-xl px-10 pt-24">
-        <div class="card-body">
-          <label class="input input-bordered flex items-center gap-2 py-2"
-            style={ emailError() ? {
-                "border-color": "var(--color-red-500)" } : {}
-              }
-          >
-            <AiFillMessage />
-            <input onchange={e => setEmail(e.target.value)} type="text" class="grow rounded text-cyan-200" placeholder="Email" />
-          </label>
-          { emailError() && <p class="text-red-500 text-sm">{emailError()}</p> }
-          <label class="input input-bordered flex items-center gap-2 py-2"
-          style={ passwordError() ? {
-            "border-color": "var(--color-red-500)" } : {}
-          }>
-            <AiFillEye />
-            <input onchange={e => setPassword(e.target.value)} type="password" class="grow text-cyan-200" placeholder="Password" />
-          </label>
-          { passwordError() && <p class="text-red-500 text-sm">{passwordError()!.replace("String", "Password")}</p> }
+      <div class="w-full flex justify-center">
+        <div class="card image-full w-96 shadow-xl px-10 pt-24">
+          <div class="card-body">
+            <label class="input input-bordered flex items-center gap-2 py-2"
+              style={ emailError() ? {
+                  "border-color": "var(--color-red-500)" } : {}
+                }
+            >
+              <AiFillMessage />
+              <input onchange={e => setEmail(e.target.value)} type="text" class="grow rounded text-cyan-200" placeholder="Email" />
+            </label>
+            { emailError() && <p class="text-red-500 text-sm">{emailError()}</p> }
+            <label class="input input-bordered flex items-center gap-2 py-2"
+            style={ passwordError() ? {
+              "border-color": "var(--color-red-500)" } : {}
+            }>
+              <AiFillEye />
+              <input onchange={e => setPassword(e.target.value)} type="password" class="grow text-cyan-200" placeholder="Password" />
+            </label>
+            { passwordError() && <p class="text-red-500 text-sm">{passwordError()!.replace("String", "Password")}</p> }
 
-          { error() && <p class="text-red-500">{error()}</p> }
+            { error() && <p class="text-red-500">{error()}</p> }
 
-          <button class="btn glass mt-10" onclick={login}>LOGIN</button>
+            <button class="btn glass mt-10" onclick={login}>LOGIN</button>
+          </div>
         </div>
       </div>
     </main>

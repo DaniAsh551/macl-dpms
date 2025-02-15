@@ -7,7 +7,7 @@ generator client {
 
 generator zod {
   provider  = "zod-prisma-types"
-  output    = "../../src/zod"
+  output    = "../src/zod"
 }
 
 datasource db {
@@ -50,7 +50,8 @@ model Permit {
   department  Department @relation(fields: [department_id], references: [id])
   department_id Int
   type        String
-  approved    Boolean
+  approved    Boolean?
+  reason      String?
   justification String?
   valid_from  DateTime
   valid_until DateTime

@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:3000/api";
+const API_BASE = `${(new URL(window.location.href)).protocol}/${window.location.hostname}:3000/api`;
 
 export interface IResponse<T> {
     status: number;
@@ -21,22 +21,33 @@ export type User = {
     uuid: string;
     department_id: number;
     deleted: boolean;
+    roles: string[],
+    permissions: string[];
+    department: {
+        id: number,
+        name: string
+    }
 };
 
+function setLs(key:string, value?:string) {
+    if(!value)
+        return localStorage.removeItem(key);
+    localStorage.setItem(key, value);
+}
 export class ApiClient {
     authToken = {
         get: () => localStorage["authToken"],
-        set: (token?: string) => (localStorage["authToken"] = token),
+        set: (token?: string) => setLs("authToken", token),
     };
 
     refreshToken = {
         get: () => localStorage["refreshToken"],
-        set: (token?: string) => (localStorage["refreshToken"] = token),
+        set: (token?: string) => setLs("refreshToken", token),
     };
 
     user = {
         get: () => localStorage["user"] ? JSON.parse(localStorage["user"]) as User : null,
-        set: (user:User) => localStorage["user"] = JSON.stringify(user),
+        set: (user?:User) => setLs("user", JSON.stringify(user)),
     };
 
     async request<T>(
@@ -71,7 +82,7 @@ export class ApiClient {
 
         if (
             resp.status == 401 &&
-            resp.error == "Access token expired" &&
+            ([ "Access token expired", "Invalid access token" ].includes(resp.error!)) &&
             this.refreshToken.get()
         ) {
             //refresh the token

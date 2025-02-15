@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import prisma from "../prisma";
-import { PermitSchema, PermitUpdateInputSchema } from "../zod";
+import { PermitCreateInputSchema, PermitSchema, PermitUncheckedCreateInputSchema, PermitUpdateInputSchema } from "../zod";
 import { Variables } from "hono/types";
 import { error, success } from "../response";
 import { Permit } from "@prisma/client";
 import { addDays } from "../utils";
-import { hasPermission, userId } from "../auth";
+import { hasPermission, user, userId } from "../auth";
 
 export enum PermitType {
     Restricted  = "restricted",
@@ -132,18 +132,25 @@ permitRoutes.get("/:id{[0-9]+}", async (c) => {
 permitRoutes.post("/", async (c) => {
     if(!await hasPermission(
         userId(c)!,
-        "permits:create",
+        "permit:create",
     )) {
         return error(c, "You do not have access to this operation", 403)
     }
 
-    const parsed = await PermitSchema.safeParseAsync(await c.req.json());
+    const me = (await user(c))!;
+
+    const data:Permit = {
+        ... (await c.req.json()),
+        department_id: me.department_id,
+        full_name: me.name!,
+        user_id: userId(c)!,
+        approved: null,
+        deleted: false
+    };
+    const parsed = await PermitUncheckedCreateInputSchema.safeParseAsync(data);
 
     if (!parsed.success) {
-        return c.json({
-            success: false,
-            errors: parsed.error.flatten(),
-        });
+        return error(c, parsed.error.issues.findLast(x => x)!.message, 400);
     }
 
     const permit = await prisma.permit.create({ data: {
@@ -166,15 +173,12 @@ permitRoutes.put("/:id{[0-9]+}", async (c) => {
         "permits:approve",
     )) {
         return error(c, "You do not have access to this operation", 403)
-    } else if(isApproving && !parsed.data?.justification) {
-        return error(c, "justification is needed for approval", 400);
+    } else if(isApproving && !parsed.data?.reason) {
+        return error(c, "Reason is needed for approval", 400);
     }
 
     if (!parsed.success) {
-        return c.json({
-            success: false,
-            errors: parsed.error.flatten(),
-        });
+        return error(c, parsed.error.issues.findLast(x => x)!.message, 400);
     }
 
     const permit = await prisma.permit.update({ where: {
@@ -234,31 +238,40 @@ permitRoutes.get("/expiring", async (c) => {
  * Get my permits
  */
 permitRoutes.get("/mine", async (c) => {
-    const approved = prisma.permit.findMany({
+    const pending = await prisma.permit.findMany({
+        where: {
+            user_id: userId(c)!,
+            approved: null,
+            deleted: false
+        },
+        orderBy: {
+            valid_until: "asc"
+        }
+    });
+
+    const approved = await prisma.permit.findMany({
         where: {
             user_id: userId(c)!,
             approved: true,
             deleted: false
         },
         orderBy: {
-            type: "asc",
             valid_until: "asc"
         }
     });
 
-    const pending = prisma.permit.findMany({
+    const rejected = await prisma.permit.findMany({
         where: {
             user_id: userId(c)!,
             approved: false,
             deleted: false
         },
         orderBy: {
-            type: "asc",
             valid_until: "asc"
         }
     });
 
-    return success(c, { approved, pending });
+    return success(c, { approved, pending, rejected });
 });
 
 /**

@@ -111,9 +111,46 @@ authRoutes.post("/refresh", async (c) => {
 authRoutes.get("/user", protectedJwt, async (c) => {
     const { password, refresh_token, ...user } = (await prisma.user.findUnique({
         where: { id: userId(c)! },
+        include: {
+            department: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            }
+        }
     }))!;
 
-    return success(c, user);
+    const userRoles = await prisma.userRole.findMany({
+        where: {
+            user_id: userId(c)!
+        },
+        include: {
+            role: {
+                include: {
+                    role_permissions: {
+                        include: {
+                            permission: {
+                                select: {
+                                    id: true,
+                                    name: true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        }
+    });
+
+    const permissions = userRoles.map(role => role.role.role_permissions.map(permission => permission.permission.name)).flat().filter((x,i,a) => a.indexOf(x) === i);
+    const roles = userRoles.map(role => role.role.name);
+
+    return success(c, {
+        ...user,
+        roles,
+        permissions
+    });
 });
 
 export default authRoutes;
